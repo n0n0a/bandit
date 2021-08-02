@@ -179,6 +179,7 @@ def thompson_bandit():
     np.save(os.path.join(data_dir, "thompson.npy"), regrets_sum / run)
     np.save(os.path.join(detail_dir, f"thompson_{now.strftime('%Y%m%d_%H%M%S')}.npy"), regrets_sum / run)
 
+
 if __name__ == '__main__':
     greedy_bandit()
     linucb_bandit()

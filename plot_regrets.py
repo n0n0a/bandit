@@ -15,7 +15,7 @@ log_plot_dir = os.path.join(data_dir, "regret_log.jpg")
 
 def plot_regrets():
     paths = [greedy_dir, linucb_dir, thompson_dir]
-    names = ["greedy", "LinUCB", "ThompsonSampling"]
+    names = ["Greedy", "LinUCB", "ThompsonSampling"]
     fig = plt.figure()
     for idx, path in enumerate(paths):
         if os.path.exists(path):
