@@ -1,4 +1,3 @@
-import scipy as sp
 import numpy as np
 import math
 from abc import ABC, abstractmethod
@@ -8,8 +7,11 @@ _base = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(_base, "data")
 detail_dir = os.path.join(_base, "data/detail")
 
+# number of independent run
 run = 100
+# total time of bandit problem
 T = 10000
+# features
 features = np.mat([[math.cos(i * math.pi / 4), math.sin(i * math.pi / 4)]
                           for i in range(8)])
 # known parameter
@@ -20,8 +22,9 @@ feature_dimension = 2
 # hyper parameter
 lambda_ = 1.0
 # alpha_T = sqrt(2logt)
+simga0 = 1.0
 
-
+# bandit environment
 class BanditEnv:
     def __init__(self):
         self.theta_star = np.mat([3, 1]).T
@@ -32,7 +35,7 @@ class BanditEnv:
         reward = np.random.normal(loc=feature*self.theta_star, scale=sigma)
         return reward
 
-
+# method basic class
 class BanditMethod(ABC):
     @abstractmethod
     def take_action(cls):
@@ -43,6 +46,7 @@ class BanditMethod(ABC):
         raise NotImplementedError
 
 
+# greedy method class
 class Greedy(BanditMethod):
     def __init__(self):
         self.A_inv = np.mat(lambda_ * np.identity(feature_dimension))
@@ -60,6 +64,7 @@ class Greedy(BanditMethod):
         self.theta_hat = self.A_inv * self.b
 
 
+# LinUCB method class
 class LinUCB(BanditMethod):
     def __init__(self):
         self.A_inv = np.mat(lambda_ * np.identity(feature_dimension))
@@ -88,9 +93,10 @@ class LinUCB(BanditMethod):
         self.theta_hat = self.A_inv * self.b
 
 
+# ThompsonSampling method class
 class ThompsonSampling(BanditMethod):
     def __init__(self):
-        self.sigma0 = 1
+        self.sigma0 = simga0
         self.A_inv = np.mat((sigma/self.sigma0)**2 * np.identity(feature_dimension))
         self.b = np.zeros((feature_dimension, 1))
         self.theta_hat = np.mat(np.random.multivariate_normal(mean=[0, 0],
@@ -108,6 +114,7 @@ class ThompsonSampling(BanditMethod):
                                                               cov=sigma*self.A_inv)).T
 
 
+# solve bandit problem by selected method
 def play_bandit(method_name: str):
     env = BanditEnv()
     opt_action = np.argmax(features*env.theta_star)
