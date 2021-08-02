@@ -108,19 +108,26 @@ class ThompsonSampling(BanditMethod):
                                                               cov=sigma*self.A_inv)).T
 
 
-def greedy_bandit():
+def play_bandit(method_name: str):
     env = BanditEnv()
     opt_action = np.argmax(features*env.theta_star)
     regrets_sum = np.zeros(T+1)
     for _ in range(run):
-        greddy = Greedy()
+        method = None
+        if method_name == "greedy":
+            method = Greedy()
+        elif method_name == "linucb":
+            method = LinUCB()
+        elif method_name == "thompson":
+            method = ThompsonSampling()
+        assert method is not None
         regret = 0.0
         regrets = [0.0]
         for t in range(T):
-            action = greddy.take_action()
+            action = method.take_action()
             assert 0 <= action < action_dimension
             rt = env.sample(action)
-            greddy.update(action=action, rt=rt)
+            method.update(action=action, rt=rt)
             regret += ((features[opt_action]-features[action])*env.theta_star)[0, 0]
             regrets.append(regret)
         regrets_sum += regrets
@@ -128,59 +135,11 @@ def greedy_bandit():
     os.makedirs(data_dir, exist_ok=True)
     os.makedirs(detail_dir, exist_ok=True)
     now = datetime.datetime.now()
-    np.save(os.path.join(data_dir, "greedy.npy"), regrets_sum / run)
-    np.save(os.path.join(detail_dir, f"greedy_{now.strftime('%Y%m%d_%H%M%S')}.npy"), regrets_sum / run)
-
-
-def linucb_bandit():
-    env = BanditEnv()
-    opt_action = np.argmax(features*env.theta_star)
-    regrets_sum = np.zeros(T+1)
-    for _ in range(run):
-        linucb = LinUCB()
-        regret = 0.0
-        regrets = [0.0]
-        for t in range(T):
-            action = linucb.take_action()
-            assert 0 <= action < action_dimension
-            rt = env.sample(action)
-            linucb.update(action=action, rt=rt)
-            regret += ((features[opt_action]-features[action])*env.theta_star)[0, 0]
-            regrets.append(regret)
-        regrets_sum += regrets
-
-    os.makedirs(data_dir, exist_ok=True)
-    os.makedirs(detail_dir, exist_ok=True)
-    now = datetime.datetime.now()
-    np.save(os.path.join(data_dir, "linucb.npy"), regrets_sum / run)
-    np.save(os.path.join(detail_dir, f"linucb_{now.strftime('%Y%m%d_%H%M%S')}.npy"), regrets_sum / run)
-
-
-def thompson_bandit():
-    env = BanditEnv()
-    opt_action = np.argmax(features*env.theta_star)
-    regrets_sum = np.zeros(T+1)
-    for _ in range(run):
-        thompson = ThompsonSampling()
-        regret = 0.0
-        regrets = [0.0]
-        for t in range(T):
-            action = thompson.take_action()
-            assert 0 <= action < action_dimension
-            rt = env.sample(action)
-            thompson.update(action=action, rt=rt)
-            regret += ((features[opt_action]-features[action])*env.theta_star)[0, 0]
-            regrets.append(regret)
-        regrets_sum += regrets
-
-    os.makedirs(data_dir, exist_ok=True)
-    os.makedirs(detail_dir, exist_ok=True)
-    now = datetime.datetime.now()
-    np.save(os.path.join(data_dir, "thompson.npy"), regrets_sum / run)
-    np.save(os.path.join(detail_dir, f"thompson_{now.strftime('%Y%m%d_%H%M%S')}.npy"), regrets_sum / run)
+    np.save(os.path.join(data_dir, f"{method_name}.npy"), regrets_sum / run)
+    np.save(os.path.join(detail_dir, f"{method_name}_{now.strftime('%Y%m%d_%H%M%S')}.npy"), regrets_sum / run)
 
 
 if __name__ == '__main__':
-    greedy_bandit()
-    linucb_bandit()
-    thompson_bandit()
+    play_bandit("greedy")
+    play_bandit("linucb")
+    play_bandit("thompson")
